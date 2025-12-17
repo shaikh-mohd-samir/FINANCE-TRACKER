@@ -3,8 +3,8 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 
 import Navbar from "./components/Navbar";
 
-import Signup from "./pages/Signup";
-import Signin from "./pages/Signin";
+import Signup from "./pages/signin_temp";
+import Signin from "./pages/signup_temp";
 import VerifyOtp from "./pages/VerifyOtp";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
