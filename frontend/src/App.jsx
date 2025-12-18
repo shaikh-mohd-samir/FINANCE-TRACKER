@@ -11,13 +11,13 @@ import ResetPassword from "./pages/ResetPassword";
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 
-/* 🔒 Protected Route */
+/* 🔐 Protected Route */
 function PrivateRoute({ children }) {
   const { user } = useAuth();
   return user ? children : <Navigate to="/signin" replace />;
 }
 
-/* 🌐 All Routes */
+/* 🌍 All Routes */
 function AppRoutes() {
   const { user } = useAuth();
 
@@ -27,16 +27,17 @@ function AppRoutes() {
       {user && <Navbar />}
 
       <Routes>
-        {/* Auth routes */}
-        <Route path="/signup" element={!user ? <Signup /> : <Navigate to="/" replace />} />
-        <Route path="/signin" element={!user ? <Signin /> : <Navigate to="/" replace />} />
+        {/* 👤 Public Routes */}
+        <Route path="/" element={<Signup />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/signin" element={<Signin />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/forgot" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
 
-        {/* Protected routes */}
+        {/* 🔒 Protected Routes */}
         <Route
-          path="/"
+          path="/home"
           element={
             <PrivateRoute>
               <Home />
@@ -53,8 +54,8 @@ function AppRoutes() {
           }
         />
 
-        {/* Fallback */}
-        <Route path="*" element={<Navigate to={user ? "/" : "/signin"} replace />} />
+        {/* 🧭 Fallback */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>
   );
