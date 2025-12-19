@@ -1,35 +1,35 @@
-import Header from "../components/Header";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import API from "../api";
+import Header from "../components/Header";
 
 export default function Signup() {
   const navigate = useNavigate();
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-
-  const [msg, setMsg] = useState("");
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const submit = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setMsg("");
+    setError("");
     setLoading(true);
 
     try {
-      await API.post("/auth/signup", form);
+      const res = await API.post("/auth/signup", {
+        username,
+        email,
+        password,
+      });
 
-      setMsg("Signup successful. Please login.");
+      console.log("SIGNUP SUCCESS 👉", res.data);
 
-      setTimeout(() => {
-        navigate("/signin");
-      }, 1200);
+      navigate("/signin");
     } catch (err) {
-      setMsg(err.response?.data?.message || "Signup failed");
+      console.log("SIGNUP ERROR 👉", err.response?.data);
+      setError(err.response?.data?.message || "Signup failed");
     } finally {
       setLoading(false);
     }
@@ -37,82 +37,68 @@ export default function Signup() {
 
   return (
     <>
-      {/* HEADER */}
       <Header />
 
-      {/* SIGNUP CARD */}
       <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-        <form
-          onSubmit={submit}
-          className="w-full max-w-sm bg-white p-6 rounded-lg shadow-md"
-        >
-          <h2 className="text-2xl font-semibold text-center mb-4 text-gray-700">
+        <div className="w-full max-w-md bg-white p-6 rounded-lg shadow-md">
+          <h2 className="text-2xl font-semibold text-center mb-4">
             Create Account
           </h2>
 
-          <input
-            type="text"
-            placeholder="Name"
-            className="w-full border px-4 py-2 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.name}
-            onChange={(e) =>
-              setForm({ ...form, name: e.target.value })
-            }
-            required
-          />
-
-          <input
-            type="email"
-            placeholder="Email"
-            className="w-full border px-4 py-2 rounded mb-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.email}
-            onChange={(e) =>
-              setForm({ ...form, email: e.target.value })
-            }
-            required
-          />
-
-          <input
-            type="password"
-            placeholder="Password"
-            className="w-full border px-4 py-2 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={form.password}
-            onChange={(e) =>
-              setForm({ ...form, password: e.target.value })
-            }
-            required
-          />
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
-          >
-            {loading ? "Creating account..." : "Sign Up"}
-          </button>
-
-          {msg && (
-            <p
-              className={`text-sm mt-3 text-center ${
-                msg.includes("successful")
-                  ? "text-green-600"
-                  : "text-red-500"
-              }`}
-            >
-              {msg}
+          {error && (
+            <p className="mb-4 text-center text-sm text-red-500">
+              {error}
             </p>
           )}
 
-          <div className="mt-4 text-center">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
             <button
-              type="button"
-              onClick={() => navigate("/signin")}
-              className="text-sm text-blue-600 hover:underline"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 transition"
             >
-              Already have an account? Sign In
+              {loading ? "Signing up..." : "Sign Up"}
             </button>
+          </form>
+
+          {/* ✅ SIGN IN LINK */}
+          <div className="mt-4 text-center text-sm">
+            Already have an account?{" "}
+            <Link
+              to="/signin"
+              className="text-blue-600 hover:underline font-medium"
+            >
+              Sign In
+            </Link>
           </div>
-        </form>
+        </div>
       </div>
     </>
   );

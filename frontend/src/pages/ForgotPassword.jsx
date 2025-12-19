@@ -9,19 +9,24 @@ export default function ForgotPassword() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  // STEP 1 — SEND OTP
+  // ================= STEP 1: SEND OTP =================
   const sendOtp = async () => {
     try {
       await axios.post("/auth/forgot-password", { email });
       alert("OTP sent to your email");
       setStep(2);
     } catch (err) {
-      alert("Email not found");
+      alert(err.response?.data?.message || "Email not found");
     }
   };
 
-  // STEP 2 — VERIFY OTP & RESET PASSWORD
+  // ================= STEP 2: VERIFY OTP & RESET =================
   const resetPassword = async () => {
+    if (!otp || !password || !confirmPassword) {
+      alert("All fields required");
+      return;
+    }
+
     if (password !== confirmPassword) {
       alert("Passwords do not match");
       return;
@@ -30,19 +35,20 @@ export default function ForgotPassword() {
     try {
       await axios.post("/auth/reset-password", {
         email,
-        otp,
+        otp: String(otp), // 🔥 VERY IMPORTANT
         password,
       });
 
       alert("Password reset successfully");
-      setStep(1);
 
+      // reset state
+      setStep(1);
       setEmail("");
       setOtp("");
       setPassword("");
       setConfirmPassword("");
     } catch (err) {
-      alert("Invalid OTP or OTP expired");
+      alert(err.response?.data?.message || "Invalid OTP or OTP expired");
     }
   };
 
@@ -65,11 +71,16 @@ export default function ForgotPassword() {
             />
 
             <button
-              onClick={sendOtp}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700"
-            >
-              Send OTP
-            </button>
+            onClick={sendOtp}
+            disabled={step !== 1}
+            className={`w-full mt-4 py-3 rounded-lg font-semibold transition
+            ${step !== 1
+            ? "bg-gray-400 cursor-not-allowed text-white"
+            : "bg-green-600 hover:bg-green-700 text-white"
+        }`}
+      >
+            Send OTP
+          </button>
           </>
         )}
 

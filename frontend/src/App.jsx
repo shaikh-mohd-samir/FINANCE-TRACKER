@@ -1,6 +1,11 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 
+import { AuthProvider, useAuth } from "./context/AuthContext";
 import Navbar from "./components/Navbar";
 
 import Signup from "./pages/SignUp";
@@ -8,16 +13,17 @@ import Signin from "./pages/SignIn";
 import VerifyOtp from "./pages/VerifyOTP";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+
 import Home from "./pages/Home";
 import Profile from "./pages/Profile";
 
-/* 🔐 Protected Route */
+/* 🔒 Protected Route */
 function PrivateRoute({ children }) {
   const { user } = useAuth();
   return user ? children : <Navigate to="/signin" replace />;
 }
 
-/* 🌍 All Routes */
+/* 🌍 Routes */
 function AppRoutes() {
   const { user } = useAuth();
 
@@ -27,15 +33,20 @@ function AppRoutes() {
       {user && <Navbar />}
 
       <Routes>
-        {/* 👤 Public Routes */}
-        <Route path="/" element={<Signup />} />
+        {/* 🌐 Public Routes */}
         <Route path="/signup" element={<Signup />} />
         <Route path="/signin" element={<Signin />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
-        <Route path="/forgot" element={<ForgotPassword />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset" element={<ResetPassword />} />
 
-        {/* 🔒 Protected Routes */}
+        {/* 🔁 ROOT REDIRECT (THIS FIXES LOCALHOST) */}
+        <Route
+          path="/"
+          element={<Navigate to={user ? "/home" : "/signup"} replace />}
+        />
+
+        {/* 🔐 Protected Routes */}
         <Route
           path="/home"
           element={
@@ -54,8 +65,11 @@ function AppRoutes() {
           }
         />
 
-        {/* 🧭 Fallback */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* ❌ Fallback */}
+        <Route
+          path="*"
+          element={<Navigate to={user ? "/home" : "/signup"} replace />}
+        />
       </Routes>
     </>
   );
