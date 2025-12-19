@@ -1,16 +1,14 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const bcrypt = require("bcryptjs");
+const sendMail = require("../utils/mail");
+const generateOTP = require("../utils/otp");
 
-// signup
+/* ===================== SIGNUP ===================== */
 exports.signupRequest = async (req, res) => {
   try {
-    console.log("SIGNUP BODY 👉", req.body);
+    const { username, email, password } = req.body;
 
-    const { name, email, password } = req.body;
-
-    // validate ALL fields
-    if (!name || !email || !password) {
+    if (!username || !email || !password) {
       return res.status(400).json({ message: "All fields required" });
     }
 
@@ -19,83 +17,160 @@ exports.signupRequest = async (req, res) => {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    await User.create({
-      name,            
+    const newUser = await User.create({
+      username,
       email,
-      password: hashedPassword,
+      password,
     });
 
-    res.status(201).json({ message: "Signup successful" });
+    return res.status(201).json({
+      message: "Signup successful",
+      user: {
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+      },
+    });
   } catch (err) {
-    console.error("SIGNUP ERROR ❌", err.message);
-    res.status(500).json({ message: err.message });
+    console.error("SIGNUP ERROR:", err);
+    return res.status(500).json({ message: "Signup failed" });
   }
 };
-// verify user dummy
-exports.verifySignup = async (req, res) => {
-  res.json({ message: "Signup verified" });
-};
 
-// signin
+/* ===================== SIGNIN ===================== */
 exports.signin = async (req, res) => {
   try {
-    console.log("REQ BODY 👉", req.body);
+    const { email, password } = req.body;
 
-    const {name, email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
 
     const user = await User.findOne({ email });
-    console.log("USER FOUND 👉", user);
-
     if (!user) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    console.log("PASSWORD MATCH 👉", isMatch);
-
+    const isMatch = await user.matchPassword(password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    //CREATE TOKEN
     const token = jwt.sign(
-      { 
-        id: user._id,
-        username:user.username,
-        email:user.email
-      },
+      { userId: user._id },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
 
-    //SEND TOKEN + USER
-    res.json({
+    return res.json({
       token,
       user: {
         id: user._id,
-        username:user.name,
+        username: user.username,
         email: user.email,
       },
     });
   } catch (err) {
-    console.error("SIGNIN ERROR 👉", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("SIGNIN ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
-// forgot password
+/* ===================== FORGOT PASSWORD (SEND OTP) ===================== */
 exports.forgot = async (req, res) => {
-  res.json({ message: "OTP sent" });
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const otp = generateOTP(6).toString();
+
+    user.resetOtp = otp;
+    user.resetOtpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
+    await user.save();
+
+    await sendMail(
+      email,
+      "Finance Tracker - Password Reset OTP",
+      `Your OTP is: ${otp}\nThis OTP will expire in 5 minutes.`
+    );
+
+    return res.json({ message: "OTP sent to email" });
+  } catch (err) {
+    console.error("FORGOT PASSWORD ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
 
-// reset password
+/* ===================== RESET PASSWORD (VERIFY OTP) ===================== */
 exports.reset = async (req, res) => {
-  res.json({ message: "Password reset" });
+  try {
+    const { email, otp, password } = req.body;
+
+    if (!email || !otp || !password) {
+      return res.status(400).json({ message: "All fields required" });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // // ✅ DEBUG LOGS (NOW SAFE)
+    // console.log("DB OTP:", user.resetOTP);
+    // console.log("USER OTP:", otp);
+    // console.log("EXPIRY:", user.resetOTPExpiry);
+    // console.log("NOW:", Date.now());
+
+    // ✅ OTP CHECK
+    if (
+      !user.resetOtp ||
+      String(user.resetOtp).trim() !== String(otp).trim() ||
+      !user.resetOtpExpiry ||
+      user.resetOtpExpiry < Date.now()
+    ) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    user.password = password;
+    user.resetOtp = null;
+    user.resetOtpExpiry = null;
+    await user.save();
+
+    return res.json({ message: "Password reset successful" });
+  } catch (err) {
+    console.error("RESET PASSWORD ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
 };
 
-// change password
+/* ===================== CHANGE PASSWORD (LOGGED IN) ===================== */
 exports.changePassword = async (req, res) => {
-  res.json({ message: "Password changed" });
+  try {
+    const { userId, newPassword } = req.body;
+
+    if (!newPassword) {
+      return res.status(400).json({ message: "Password required" });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    return res.json({ message: "Password changed successfully" });
+  } catch (err) {
+    console.error("CHANGE PASSWORD ERROR:", err);
+    return res.status(500).json({ message: "Server error" });
+  }
 };

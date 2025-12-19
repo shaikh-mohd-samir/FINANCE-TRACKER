@@ -9,12 +9,19 @@ const transporter = nodemailer.createTransport({
 });
 
 async function sendMail(to, subject, text) {
-  await transporter.sendMail({
-    from: process.env.EMAIL_USER,
-    to,
-    subject,
-    text,
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: "Finance Tracker <" + process.env.EMAIL_USER + ">",
+      to: to,
+      subject: subject,
+      text: text,
+    });
+
+    console.log("EMAIL SENT:", info.response);
+  } catch (err) {
+    console.error("EMAIL ERROR:", err);
+    throw err;
+  }
 }
 
 module.exports = sendMail;

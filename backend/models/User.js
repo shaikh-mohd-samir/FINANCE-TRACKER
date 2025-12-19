@@ -3,7 +3,7 @@ const bcrypt = require("bcryptjs");
 
 const userSchema = new mongoose.Schema(
   {
-    name: {
+    username: {
       type: String,
       required: true,
       trim: true,
@@ -14,6 +14,7 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
       lowercase: true,
+      trim: true,
     },
 
     password: {
@@ -21,19 +22,21 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
 
-    // OTP FOR FORGOT PASSWORD
-    resetOTP: {
+    // 🔐 OTP FOR FORGOT PASSWORD
+    resetOtp: {
       type: String,
+      default: null,
     },
 
-    resetOTPExpiry: {
+    resetOtpExpiry: {
       type: Date,
+      default: null,
     },
   },
   { timestamps: true }
 );
 
-// HASH PASSWORD BEFORE SAVE
+// 🔒 HASH PASSWORD BEFORE SAVE
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
 
@@ -42,7 +45,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// COMPARE PASSWORD
+// 🔑 COMPARE PASSWORD
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

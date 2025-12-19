@@ -2,60 +2,87 @@ const Transaction = require("../models/Transaction");
 
 /**
  * GET transactions
- * Supports:
- * - user-based data (JWT)
- * - filter by type
- * - sorting
  */
 exports.getTransactions = async (req, res) => {
   try {
-    const { type, sort } = req.query;
+    const { type, sort, page = 1, limit = 5 } = req.query;
 
-    // ONLY logged-in user's transactions
+    const skip = (page - 1) * limit;
+
     let query = { user: req.user.id };
 
-    // Filter
     if (type && type !== "all") {
       query.type = type;
     }
 
-    // Sorting
-    let sortOption = { createdAt: -1 }; // newest first
-
+    let sortOption = { createdAt: -1 };
     if (sort === "date_asc") sortOption = { createdAt: 1 };
     if (sort === "amount_desc") sortOption = { amount: -1 };
     if (sort === "amount_asc") sortOption = { amount: 1 };
 
-    const transactions = await Transaction.find(query).sort(sortOption);
+    const total = await Transaction.countDocuments(query);
 
-    res.json(transactions);
+    const transactions = await Transaction.find(query)
+      .sort(sortOption)
+      .skip(Number(skip))
+      .limit(Number(limit));
+
+    res.json({
+      transactions,
+      currentPage: Number(page),
+      totalPages: Math.ceil(total / limit),
+      totalItems: total,
+    });
   } catch (err) {
-    res.status(500).json({ message: "Failed to fetch transactions" });
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 };
 
 /**
- * POST new transaction
- * Saves transaction for logged-in user
+ * POST add transaction
  */
 exports.addTransaction = async (req, res) => {
   try {
-    const { type, description, amount } = req.body;
+    const { type, description, amount, date } = req.body;
 
-    if (!type || !description || !amount) {
+    if (!type || !description || amount === undefined || !date) {
       return res.status(400).json({ message: "All fields required" });
     }
 
-    const transaction = new Transaction({
+    const transaction = await Transaction.create({
+      user: req.user.id,
       type,
       description,
-      amount,
+      amount: Number(amount),
+      date,
+    });
+
+    res.status(201).json(transaction);
+  } catch (err) {
+    console.error("Add transaction error:", err);
+    res.status(500).json({ message: err.message });
+  }
+};
+
+/**
+ * DELETE transaction
+ */
+exports.deleteTransaction = async (req, res) => {
+  try {
+    const transaction = await Transaction.findOne({
+      _id: req.params.id,
       user: req.user.id,
     });
 
-    await transaction.save();
-    res.status(201).json(transaction);
+    if (!transaction) {
+      return res.status(404).json({ message: "Transaction not found" });
+    }
+
+    await transaction.deleteOne();
+    res.json({ message: "Transaction deleted" });
   } catch (err) {
-    res.status(500).json({ message: "Failed to add transaction" });
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 };
