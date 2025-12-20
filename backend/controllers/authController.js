@@ -5,6 +5,7 @@ const generateOTP = require("../utils/otp");
 
 /* ===================== SIGNUP ===================== */
 exports.signupRequest = async (req, res) => {
+  console.log("SIGNUP BODY", req.body);
   try {
     const { username, email, password } = req.body;
 
@@ -81,31 +82,26 @@ exports.forgot = async (req, res) => {
   try {
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ message: "Email required" });
-    }
-
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    const otp = generateOTP(6).toString();
+    // ✅ FIX: define OTP properly
+    const otp = generateOTP().toString();
+
+    console.log("OTP GENERATED 👉", otp);
 
     user.resetOtp = otp;
     user.resetOtpExpiry = Date.now() + 5 * 60 * 1000; // 5 minutes
     await user.save();
 
-    await sendMail(
-      email,
-      "Finance Tracker - Password Reset OTP",
-      `Your OTP is: ${otp}\nThis OTP will expire in 5 minutes.`
-    );
+    await sendMail(email, otp);
 
     return res.json({ message: "OTP sent to email" });
   } catch (err) {
-    console.error("FORGOT PASSWORD ERROR:", err);
-    return res.status(500).json({ message: "Server error" });
+    console.error("FORGOT PASSWORD ERROR 👉", err);
+    return res.status(500).json({ message: "Failed to send OTP" });
   }
 };
 

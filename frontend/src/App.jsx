@@ -23,7 +23,7 @@ function PrivateRoute({ children }) {
   return user ? children : <Navigate to="/signin" replace />;
 }
 
-/* 🌍 Routes */
+/* Routes */
 function AppRoutes() {
   const { user } = useAuth();
 
@@ -38,7 +38,7 @@ function AppRoutes() {
         <Route path="/signin" element={<Signin />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset" element={<ResetPassword />} />
+        <Route path="/reset" element={<PrivateRoute><ResetPassword/></PrivateRoute>}/>
 
         {/* 🔁 ROOT REDIRECT (THIS FIXES LOCALHOST) */}
         <Route

@@ -33,7 +33,7 @@ export default function Profile() {
 
         <div className="mt-6 space-y-3">
           <button
-            onClick={() => navigate("/forgot")}
+            onClick={() => navigate("/reset")}
             className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
           >
             Change Password
