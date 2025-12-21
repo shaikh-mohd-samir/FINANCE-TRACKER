@@ -1,80 +1,77 @@
-# React + Vite
+## Finance Tracker (MERN Stack)
+A full-stack Finance Tracker application built with the MERN stack that allows users to manage income and expenses with secure authentication and OTP-based password recovery using Resend.
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Features
 
-Currently, two official plugins are available:
+-User Signup & Signin (JWT Authentication)
+-Secure password hashing (bcrypt)
+-Protected routes
+-Add, view & delete income/expense transactions
+-User-specific data isolation
+-Profile management
+-Logout
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Forgot Password (OTP)
 
-## React Compiler
+-OTP sent via Resend Email Service
+-OTP expiration handling
+-Secure password reset
+-OTP is sent only to registered users (security best practice)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+# Note:
+A generic success message is shown for all forgot-password requests to prevent email enumeration attacks.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+-Frontend: React, Vite, Tailwind CSS, Axios
+-Backend: Node.js, Express, MongoDB, Mongoose
+-Auth & Security: JWT, bcryptjs
+-Email: Resend
+-Deployment: Render (Backend), Vercel (Frontend)
 
-# Finance Tracker (MERN Stack)
+## Email Service
 
-A full-stack Finance Tracker web application built using the **MERN stack**.  
-Users can securely manage income and expenses with authentication and OTP verification.
+This project uses Resend for reliable OTP email delivery in production environments.
+SMTP is intentionally avoided for better cloud compatibility.
 
----
+## Setup
 
-## 🚀 Features
-
-- User Signup & Signin
-- OTP verification (Signup / Forgot Password)
-- JWT-based authentication
-- Add, view & delete transactions
-- Profile page with user details
-- Protected routes
-- Responsive UI
-
----
-
-## 🛠 Tech Stack
-
-**Frontend**
-- React (Vite)
-- Tailwind CSS
-- Axios
-- React Router
-
-**Backend**
-- Node.js
-- Express.js
-- MongoDB
-- JWT & Bcrypt
-- Nodemailer
-
----
-
-## ▶️ Run Project
 # Backend
-cd backend
+cd backend 
 npm install
 npm run dev
 
-# Frontend
-cd frontend
-npm install
+#Frontend
+cd frontend 
+npm install 
 npm run dev
 
-# Environment Variable (Backend)
+## Security Highlights
+
+-Hashed passwords 
+-JWT-based authentication 
+-OTP expiration 
+-Protected routes 
+-Email enumeration protection 
+-Environment-based secrets
+
+## Testing Note
+
+-Forgot Password works only for registered emails. To test, signup first or use a demo account.
+-Forgot Password OTp is sent only to registered emails for security reasons.
+
+## Environment Variables (Backend)
+
 PORT=5000
-MONGO_URI=your_mongodb_uri
-JWT_SECRET=your_secret
-EMAIL_USER=your_email
-EMAIL_PASS=your_app_password
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=onboarding@resend.dev
+FRONTEND_URL=http://localhost:5173
+OTP_EXP_MIN=10
 
-## Flow
-1.Sign -> OTP verification
-2.Signin
-3.Add/View/Delete transactions
-4.Forgot Password -> OTP -> Reset
+---
 
-# Author
+## Author
+
 Mohd Samir Shaikh
-
