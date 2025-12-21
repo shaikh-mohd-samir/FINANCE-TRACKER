@@ -39,17 +39,8 @@ SMTP is intentionally avoided for better cloud compatibility.
 
 ---
 
-## Environment Variables (Backend)
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-RESEND_API_KEY=your_resend_api_key
-EMAIL_FROM=onboarding@resend.dev
-FRONTEND_URL=http://localhost:5173
-OTP_EXP_MIN=10
 
----
+## Setup 
 
 # Backend
 cd backend
@@ -79,8 +70,22 @@ npm run dev
 Forgot Password works only for registered emails.
 To test, signup first or use a demo account.
 
+
+## Environment Variables (Backend)
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+RESEND_API_KEY=your_resend_api_key
+EMAIL_FROM=onboarding@resend.dev
+FRONTEND_URL=http://localhost:5173
+OTP_EXP_MIN=10
+
+---
+
 ## Author
 Mohd Samir Shaikh
+
 
 
 
